@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Plain HTTP is blocked by Android by default (API 28+). The deployed Flask
+  API currently has no domain/TLS certificate (bare IP), so cleartext is
+  allowed here for that one host only, not the whole app, until a domain
+  and HTTPS are set up.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">31.97.114.143</domain>
+    </domain-config>
+</network-security-config>

@@ -1,8 +1,24 @@
 buildscript {
     ext {
         buildToolsVersion = "37.0.0"
+        // Kept at the template default (24 = Android 7.0). Tried lowering
+        // this to 21 for broader "lower-end" support, but RN 0.87's
+        // prebuilt Hermes engine (ReactAndroid/hermestooling) is compiled
+        // with a hard floor of API 24 -- the build fails with a
+        // NoMatchingLibraryException below that, not just a warning.
+        // Going lower would mean dropping Hermes (JSC instead) or an
+        // older RN version, both bigger tradeoffs than staying at 24,
+        // which still covers the large majority of active Android devices.
         minSdkVersion = 24
-        compileSdkVersion = 37
+        // Wanted to pin this to 35 (Android 15, matching the client's
+        // phone) like the Flutter app, to avoid a newer-than-device
+        // compileSdk producing a manifest format the installer can't
+        // parse. Not possible here: androidx.core:core:1.17.0, pulled in
+        // transitively by this RN version's dependencies, hard-requires
+        // compileSdk >= 36 (a build failure below it, not just a
+        // warning). 36 is the lowest this dependency graph allows --
+        // still one better than the template default of 37.
+        compileSdkVersion = 36
         targetSdkVersion = 36
         ndkVersion = "27.1.12297006"
         kotlinVersion = "2.2.0"

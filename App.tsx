@@ -1,45 +1,47 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
+ * MotherWell — React Native rebuild
+ * Same PPD check-in concept and hosted Flask+MongoDB backend as the Flutter
+ * app, with a distinct layout/theme and broader Android version support.
  *
  * @format
  */
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import React from 'react';
+import { StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import RootNavigator from './src/navigation/RootNavigator';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+function AppShell() {
+  const { colors, isDark } = useTheme();
+  const navTheme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+      background: colors.background,
+      card: colors.background,
+      text: colors.textPrimary,
+      border: colors.border,
+      primary: colors.primary,
+    },
+  };
+  return (
+    <>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <NavigationContainer theme={navTheme}>
+        <RootNavigator />
+      </NavigationContainer>
+    </>
+  );
+}
 
+export default function App() {
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <ThemeProvider>
+        <AppShell />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;
