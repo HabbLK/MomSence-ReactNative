@@ -5,10 +5,6 @@ const K_NAME = 'session_name';
 const K_EMAIL = 'session_email';
 const K_ONBOARDING = 'seen_onboarding';
 const K_JOURNAL = 'journal_notes';
-// Age bracket is asked once at registration and lives on-device only (the
-// backend has no field for it), keyed by email so switching accounts on the
-// same device can't leak one user's age bracket into another's.
-const K_AGE_PREFIX = 'account_age_';
 
 export type JournalEntry = { date: string; text: string };
 
@@ -25,10 +21,6 @@ export const Storage = {
   updateCachedName: (name: string) => AsyncStorage.setItem(K_NAME, name),
   hasSeenOnboarding: async () => (await AsyncStorage.getItem(K_ONBOARDING)) === '1',
   setSeenOnboarding: () => AsyncStorage.setItem(K_ONBOARDING, '1'),
-
-  getAccountAge: (email: string) => AsyncStorage.getItem(`${K_AGE_PREFIX}${email.toLowerCase()}`),
-  setAccountAge: (email: string, age: string) =>
-    AsyncStorage.setItem(`${K_AGE_PREFIX}${email.toLowerCase()}`, age),
 
   // A short private note per calendar day, separate from the per-assessment
   // note already saved with each check-in -- this is a standalone daily

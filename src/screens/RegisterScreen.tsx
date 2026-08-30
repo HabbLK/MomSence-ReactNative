@@ -7,8 +7,6 @@ import ScreenContainer from '../components/ScreenContainer';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { Api, ApiError } from '../services/api';
-import { Storage } from '../services/storage';
-import { parseAge } from '../services/age';
 import { RegisterIllustration } from '../components/AuthIllustrations';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
@@ -19,15 +17,12 @@ export default function RegisterScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [age, setAge] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
     if (!name.trim()) return setError('Enter your name.');
     if (!email.includes('@')) return setError('Enter a valid email.');
-    const parsedAge = parseAge(age);
-    if (parsedAge == null) return setError('Enter an age between 17 and 90.');
     if (password.length < 4) return setError('Password must be at least 4 characters.');
     if (password !== confirm) return setError('Passwords do not match.');
 
@@ -35,9 +30,6 @@ export default function RegisterScreen({ navigation }: Props) {
     setError(null);
     try {
       const auth = await Api.register(name.trim(), email.trim(), password);
-      // Age isn't part of the account backend yet, so it's kept on-device,
-      // scoped to this email -- see Storage.getAccountAge/setAccountAge.
-      await Storage.setAccountAge(auth.email, String(parsedAge));
       // Registration no longer signs the user in automatically -- they
       // must log in with their new credentials, matching the Flutter app.
       navigation.navigate('Login', { registeredEmail: auth.email });
@@ -73,14 +65,6 @@ export default function RegisterScreen({ navigation }: Props) {
           onChangeText={setConfirm}
           secureTextEntry
           placeholder="••••••••"
-        />
-        <Input
-          label="Age"
-          value={age}
-          onChangeText={text => setAge(text.replace(/[^0-9]/g, ''))}
-          keyboardType="number-pad"
-          maxLength={3}
-          placeholder="e.g. 28"
         />
         {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
         <Button title="Create account" onPress={submit} loading={loading} style={styles.button} />

@@ -1,10 +1,22 @@
-// Talks to the same Flask API + centralized MongoDB backend as the Flutter
-// app (see ppd_project/api/app.py). Prediction runs server-side here via
-// POST /predict rather than on-device, to keep this app's scope focused.
+// Talks to the Flask API + centralized MongoDB backend (see
+// ppd_project/api/app.py). Prediction runs server-side via POST /predict.
 export const API_BASE = 'http://31.97.114.143';
 
-export type QuestionSchema = { key: string; label: string; options: string[] };
-export type AppSchema = { age: QuestionSchema; symptoms: QuestionSchema[]; disclaimer: string };
+export type QuestionType = 'numeric' | 'ordinal' | 'binary' | 'nominal';
+export type QuestionSchema = {
+  key: string;
+  label: string;
+  type: QuestionType;
+  options?: string[];
+  min?: number;
+  max?: number;
+};
+// The retrained model predicts from 45 risk factors. Most are stable facts
+// (age, education, relationships, pregnancy/birth history) answered once
+// as a Risk Profile; a handful plausibly change day to day and are asked
+// at each check-in. See RiskProfile in services/riskProfile.ts and
+// AssessmentScreen for how the two are merged before calling /predict.
+export type AppSchema = { profile: QuestionSchema[]; checkin: QuestionSchema[]; disclaimer: string };
 export type RiskFactor = { factor: string; direction: string; magnitude: number };
 export type RiskResult = {
   risk_probability: number;
@@ -49,21 +61,9 @@ async function handle<T>(res: Response): Promise<T> {
 }
 
 export const Api = {
-  // The /schema JSON's "age" object has no "key" field (unlike each
-  // "symptoms" entry, which does) -- it must be hardcoded to 'Age' here,
-  // the same way api_service.dart's AppSchema.fromJson does on the
-  // Flutter side. Without this, the age answer got stored under the
-  // literal key "undefined" and every submission was rejected server-side.
-  fetchSchema: (): Promise<AppSchema> =>
-    fetch(`${API_BASE}/schema`)
-      .then(res => handle<any>(res))
-      .then(raw => ({
-        age: { key: 'Age', label: raw.age.label, options: raw.age.options },
-        symptoms: raw.symptoms,
-        disclaimer: raw.disclaimer,
-      })),
+  fetchSchema: (): Promise<AppSchema> => fetch(`${API_BASE}/schema`).then(res => handle<AppSchema>(res)),
 
-  predict: (answers: Record<string, string>): Promise<RiskResult> =>
+  predict: (answers: Record<string, string | number>): Promise<RiskResult> =>
     fetch(`${API_BASE}/predict`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

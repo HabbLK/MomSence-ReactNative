@@ -221,7 +221,7 @@ function HeroCard({ onPress, styles }: { onPress: () => void; styles: Styles }) 
     <View style={styles.heroCard}>
       <View style={{ flex: 1, paddingRight: 12 }}>
         <Text style={styles.heroTitle}>Start today's wellbeing check-in</Text>
-        <Text style={styles.heroSub}>9 quick questions, ~1 minute, with a clear explanation of your result.</Text>
+        <Text style={styles.heroSub}>A short check-in with a clear explanation of your result.</Text>
         <Pressable style={styles.heroBtn} onPress={onPress}>
           <Text style={styles.heroBtnText}>Begin check-in →</Text>
         </Pressable>

@@ -6,6 +6,7 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import MainTabs from './MainTabs';
+import RiskProfileScreen from '../screens/RiskProfileScreen';
 import ResultScreen from '../screens/ResultScreen';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -28,6 +29,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Create account' }} />
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="RiskProfile" component={RiskProfileScreen} options={{ title: 'Your risk profile' }} />
       <Stack.Screen name="Result" component={ResultScreen} options={{ title: 'Your result' }} />
     </Stack.Navigator>
   );

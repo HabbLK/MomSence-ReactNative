@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Login: { registeredEmail?: string } | undefined;
   Register: undefined;
   MainTabs: undefined;
+  RiskProfile: undefined;
   Result: { result: RiskResult };
 };
 

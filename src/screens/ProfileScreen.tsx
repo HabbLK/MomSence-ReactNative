@@ -11,7 +11,7 @@ import ScreenContainer from '../components/ScreenContainer';
 import Button from '../components/Button';
 import { Api, ServerAssessment } from '../services/api';
 import { Storage } from '../services/storage';
-import { parseAge } from '../services/age';
+import { RiskProfile } from '../services/riskProfile';
 import { computeStreak } from '../services/streak';
 
 type Props = CompositeScreenProps<
@@ -30,16 +30,13 @@ export default function ProfileScreen({ navigation }: Props) {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState('');
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [age, setAge] = useState<string | null>(null);
-  const [ageEditing, setAgeEditing] = useState(false);
-  const [draftAge, setDraftAge] = useState<string | null>(null);
-  const [ageError, setAgeError] = useState<string | null>(null);
+  const [hasProfile, setHasProfile] = useState(false);
 
   const load = useCallback(async () => {
     const user = await Storage.currentUser();
     setName(user.name);
     setEmail(user.email);
-    setAge(user.email ? await Storage.getAccountAge(user.email) : null);
+    setHasProfile(user.email ? await RiskProfile.has(user.email) : false);
     const token = await Storage.getToken();
     if (token) {
       try {
@@ -55,15 +52,6 @@ export default function ProfileScreen({ navigation }: Props) {
       load();
     }, [load]),
   );
-
-  const saveAge = async () => {
-    const parsed = parseAge(draftAge ?? '');
-    if (parsed == null) return setAgeError('Enter an age between 17 and 90.');
-    if (email) await Storage.setAccountAge(email, String(parsed));
-    setAge(String(parsed));
-    setAgeError(null);
-    setAgeEditing(false);
-  };
 
   const saveName = async () => {
     const token = await Storage.getToken();
@@ -125,13 +113,9 @@ export default function ProfileScreen({ navigation }: Props) {
 
       <View style={[styles.menu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <MenuRow
-          label="Age"
-          value={age ? `${age}` : 'Not set'}
-          onPress={() => {
-            setDraftAge(age);
-            setAgeError(null);
-            setAgeEditing(true);
-          }}
+          label="Risk profile"
+          value={hasProfile ? 'Complete' : 'Set up'}
+          onPress={() => navigation.getParent()?.navigate('RiskProfile')}
           colors={colors}
         />
         <MenuRow
@@ -167,48 +151,15 @@ export default function ProfileScreen({ navigation }: Props) {
         </KeyboardAvoidingView>
       </Modal>
 
-      <Modal visible={ageEditing} transparent animationType="fade">
-        <KeyboardAvoidingView style={styles.modalBackdrop} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Your age</Text>
-            <Text style={[styles.aboutBody, { color: colors.textSecondary, marginTop: -8, marginBottom: 4 }]}>
-              Used to tailor your check-in results. Enter an age between 17 and 90.
-            </Text>
-            <TextInput
-              style={[styles.modalInput, { borderColor: colors.border, color: colors.textPrimary }]}
-              value={draftAge ?? ''}
-              onChangeText={text => {
-                setDraftAge(text.replace(/[^0-9]/g, ''));
-                setAgeError(null);
-              }}
-              keyboardType="number-pad"
-              maxLength={3}
-              placeholder="e.g. 28"
-              placeholderTextColor={colors.textSecondary}
-              autoFocus
-            />
-            {ageError ? <Text style={[styles.ageError, { color: colors.danger }]}>{ageError}</Text> : null}
-            <View style={styles.modalRow}>
-              <Pressable onPress={() => setAgeEditing(false)} style={styles.modalCancel}>
-                <Text style={{ color: colors.textSecondary, fontWeight: '700' }}>Cancel</Text>
-              </Pressable>
-              <Pressable onPress={saveAge} style={[styles.modalSave, { backgroundColor: colors.primary }]}>
-                <Text style={{ color: colors.white, fontWeight: '700' }}>Save</Text>
-              </Pressable>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
       <Modal visible={aboutOpen} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
           <View style={[styles.aboutCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>MomSense — Research Prototype</Text>
             <Text style={[styles.aboutBody, { color: colors.textSecondary }]}>
-              An explainable machine learning prototype exploring self-reported low-mood symptom
-              co-occurrence from a short screening questionnaire. This estimates how a person's OTHER
-              reported symptoms relate to feeling sad or tearful — it is not a validated postpartum
-              depression diagnosis or screening tool.
+              An explainable machine learning prototype that estimates a postpartum depression risk
+              band (Low, Medium, or High) from a one-time risk profile and short check-ins covering
+              demographic, psychosocial, and obstetric factors. This is a research prototype, not a
+              validated diagnosis or screening tool.
             </Text>
             <Text style={[styles.aboutDanger, { color: colors.danger }]}>
               This app is NOT a diagnostic tool and does not replace professional medical advice.
@@ -297,7 +248,6 @@ const styles = StyleSheet.create({
     padding: 13,
     fontSize: 16,
   },
-  ageError: { fontSize: 12.5, marginTop: 6 },
   modalRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 14, marginTop: 19 },
   modalCancel: { paddingVertical: 9, paddingHorizontal: 6 },
   modalSave: { borderRadius: Radius.sm, paddingVertical: 10, paddingHorizontal: 19 },
